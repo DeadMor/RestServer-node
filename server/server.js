@@ -1,5 +1,6 @@
 require("./config/config")
 const express = require('express')
+const path = require('path')
 const app = express()
 
 const mongoose = require("mongoose");
@@ -13,6 +14,8 @@ app.use(bodyParser.json())
 
 //configuracion global de rutas
 app.use(require("./routes/index"));
+
+app.use(express.static(path.resolve(__dirname, '../public')))
 
 
 mongoose.connect(process.env.URLDB, { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true },
