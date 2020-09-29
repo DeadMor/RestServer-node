@@ -1,6 +1,7 @@
 const express = require('express');
 
-let { verificaToken } = require("../middlewares/autenticacion")
+let { verificaToken, verificaAdmin } = require("../middlewares/autenticacion");
+const categoria = require('../models/categoria.js');
 let app = express();
 
 let Categoria = require("../models/categoria.js");
@@ -18,8 +19,10 @@ app.get("/categoria", (req, res) => {
     // limite = Number(limite);
 
     Categoria.find()
+        .sort("descripcion")
         // .skip(desde)
         // .limit(limite)
+        .populate('usuario', "nombre email")
         .exec((err, categorias) => {
 
             if (err) {
@@ -75,12 +78,61 @@ app.get("/categoria/:id", (req, res) => {
 //  actualizar categoria
 // ================================
 app.put("/categoria/:id", (req, res) => {
+    let id = req.params.id;
+    let body = req.body;
 
+    let descCategoria = {
+        descripcion: body.descripcion
+    }
+    Categoria.findByIdAndUpdate(id, descCategoria, { new: true, runValidators: true }, (err, categoriaDB) => {
+        if (err) {
+            return res.status(500).json({
+                ok: false,
+                err
+            });
+        }
+        if (!categoriaDB) {
+            return res.status(400).json({
+                ok: false,
+                err
+            });
+        }
+
+        res.json({
+            ok: true,
+            categoria: categoriaDB
+        })
+    })
 
 })
 
-app.delete("/categoria/:id", (req, res) => {
+app.delete("/categoria/:id", [verificaAdmin, verificaToken], (req, res) => {
+    let id = req.params.id;
 
+    categoria.findByIdAndRemove(id, (err, categoriaDB) => {
+
+        if (err) {
+            return res.status(500).json({
+                ok: false,
+                err
+            });
+        }
+        if (!categoriaDB) {
+            return res.status(400).json({
+                ok: false,
+                err: {
+                    message: "el id no exxiste"
+                }
+            });
+        }
+
+        res.json({
+            ok: true,
+            message: "categoria borrada"
+        })
+
+
+    })
 
 })
 
